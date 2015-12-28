@@ -2,9 +2,9 @@
 title: Monkey Number
 email: sal.testa@gmail.com
 description: >
-  Given enough time a monkey on a typewriter will create Shakespeare. Using the same idea, let'ss get a pseudorandom number seed to create what you want.
+  Given enough time a monkey on a typewriter will create Shakespeare. Using the same idea, let's get a pseudorandom number seed to create what you want.
 baseurl: "" # the subpath of your site, e.g. /blog/
-url: "https://monkeynumber.xyz" # the base hostname & protocol for your site
+url: "https://monkeynumber.xyz"
 twitter_username: saltesta14
 github_username:  SalvatoreT
 
