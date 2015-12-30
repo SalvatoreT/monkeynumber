@@ -1,0 +1,29 @@
+.typewriter-monkey.small-monkey {
+  width: 256px;
+  height: 256px;
+  background: url('/assets/typewriter-sprite.png') left center;
+  background-size: auto 256px;
+}
+
+.typewriter-monkey.small-monkey.animated {
+  animation: play-small 1s steps(16) infinite;
+}
+
+@keyframes play-small {
+  100% { background-position: -4096px; }
+}
+
+.typewriter-monkey.large-monkey {
+  width: 512px;
+  height: 512px;
+  background: url('/assets/typewriter-sprite.png') left center;
+  background-size: auto 512px;
+}
+
+.typewriter-monkey.large-monkey.animated {
+  animation: play-large 1s steps(16) infinite;
+}
+
+@keyframes play-large {
+  100% { background-position: -8192px; }
+}
