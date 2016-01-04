@@ -16,19 +16,29 @@ function displayAnswer(seed, targetLength) {
   return "ruby -e \"srand("+seed+");puts "+targetLength+".times.map{rand(97..123).chr}.join\""
 }
 
-var targetString = "sal";
-var seed = 0;
-var mt = new MersenneTwister(seed);
-var targetArray = stringToIndexArray(targetString);
-var targetLength = targetString.length;
-
 function limitedRand(limit){
   var value; 
   while (limit < (value = mt.int() & 31));
   return value;
 }
 
-function test() {
+function startAnimation() {
+  $('.typewriter-monkey').addClass('animated');
+}
+
+function stopAnimation() {
+  setTimeout(function(){
+    $('.typewriter-monkey').removeClass('animated');
+  }, 1000);
+}
+
+$('#word-input-form').submit(function(event) {
+  var targetString = $('#target-word-input').val();
+  $('#word-input-form').slideUp();
+  var seed = 0;
+  var mt = new MersenneTwister(seed);
+  var targetArray = stringToIndexArray(targetString);
+  var targetLength = targetString.length;
   var monkeys = [];
   var numMonkeys = 4;
   for (var i = 0; i < numMonkeys; i++) {
@@ -36,10 +46,12 @@ function test() {
     worker.onmessage = function(e){
       switch(e.data.type) {
         case 'completed':
-          console.log(displayAnswer(e.data.seed, targetArray.length));
           for(monkey of monkeys) {
             monkey.terminate();
           }
+          $('#monkey-result').text(displayAnswer(e.data.seed, targetArray.length));
+          $('#monkey-result-row').removeClass('hidden');
+          stopAnimation();
           break;
         case 'highScore':
           console.log("A monkey has one length "+e.data.length+" ("+e.data.seed+")");
@@ -57,4 +69,6 @@ function test() {
 
     monkeys.push(worker);
   };
-}
+  startAnimation();
+  event.preventDefault();
+});
