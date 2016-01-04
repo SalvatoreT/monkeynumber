@@ -9,14 +9,18 @@ css:
 </div>
 <div class="row">
   <div class="col-md-2 col-md-offset-5 col-xs-6 col-xs-offset-3">
-    <div class="input-group">
-      <input type="text" class="form-control" placeholder="Target Word">
+    <form class="input-group" id="word-input-form">
+      <input id="target-word-input" type="text" class="form-control" placeholder="Target Word">
       <span class="input-group-btn">
         <button class="btn btn-default" type="button">Go!</button>
       </span>
-    </div><!-- /input-group -->
+    </form><!-- /input-group -->
   </div>
+</div>
+<div id="monkey-result-row" class="row hidden">
+  <code id="monkey-result" class="col-xs-12 col-lg-6 col-lg-offset-3 text-center">
+  </code>
 </div>
 
 <script type="text/javascript" src="js/mersennetwister/src/MersenneTwister.js"></script>
-<script type="text/javascript" src="js/monkeynumber.js"></script>
+<script type="text/javascript" src="js/monkeynumber.js" defer></script>
