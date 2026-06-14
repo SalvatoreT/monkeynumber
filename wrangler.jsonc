@@ -21,5 +21,11 @@
   // for every non-production branch / PR (with non-production branch builds on).
   // https://developers.cloudflare.com/workers/configuration/previews/
   "workers_dev": true,
-  "preview_urls": true
+  "preview_urls": true,
+  // Serve the production site from the apex domain. wrangler creates the proxied
+  // DNS record + TLS cert on deploy. The zone must already be in this account.
+  // https://developers.cloudflare.com/workers/configuration/routing/custom-domains/
+  "routes": [
+    { "pattern": "monkeynumber.xyz", "custom_domain": true }
+  ]
 }
