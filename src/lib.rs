@@ -99,35 +99,50 @@ impl Default for Mt19937 {
     }
 }
 
-/// Does the MT stream seeded by `seed` begin with exactly `target`?
+/// Number of leading letters of `target` reproduced by the MT stream seeded by
+/// `seed`, stopping at the first mismatch. Equals `target.len()` exactly when the
+/// seed is a full match — and otherwise measures how "close" that seed got.
 #[inline]
-fn seed_matches(mt: &mut Mt19937, seed: u32, target: &[u8]) -> bool {
+fn prefix_match_len(mt: &mut Mt19937, seed: u32, target: &[u8]) -> usize {
     mt.init_genrand(seed);
+    let mut matched = 0;
     for &t in target {
-        if mt.limited_rand() != t as u32 {
-            return false;
+        if mt.limited_rand() == t as u32 {
+            matched += 1;
+        } else {
+            break;
         }
     }
-    true
+    matched
 }
 
-/// Scan up to `batch` seeds starting at `start`, stepping by `stride`.
-/// Returns the first seed whose output stream begins with `target`, or `None`.
+/// Scan up to `batch` seeds starting at `start`, stepping by `stride`. Returns a
+/// 3-element array `[found, seed, best_len]`:
+///
+/// - `found` is `1` if some seed fully reproduced `target`, else `0`.
+/// - `seed` is that winning seed (only meaningful when `found == 1`).
+/// - `best_len` is the longest `target` prefix any seed in this batch reproduced
+///   — i.e. how close this batch got — used for the live per-monkey display.
 ///
 /// Workers cover disjoint slices of the u32 seed space by choosing distinct
 /// `start` values and a shared `stride` (= worker count). `start` wraps modulo
 /// 2^32, matching the original site's behaviour.
 #[wasm_bindgen]
-pub fn search(target: &[u8], start: u32, stride: u32, batch: u32) -> Option<u32> {
+pub fn search(target: &[u8], start: u32, stride: u32, batch: u32) -> Vec<u32> {
     let mut mt = Mt19937::new();
     let mut seed = start;
+    let mut best_len = 0u32;
     for _ in 0..batch {
-        if seed_matches(&mut mt, seed, target) {
-            return Some(seed);
+        let matched = prefix_match_len(&mut mt, seed, target) as u32;
+        if matched as usize == target.len() {
+            return vec![1, seed, matched];
+        }
+        if matched > best_len {
+            best_len = matched;
         }
         seed = seed.wrapping_add(stride);
     }
-    None
+    vec![0, 0, best_len]
 }
 
 #[cfg(test)]
@@ -159,8 +174,8 @@ mod tests {
     #[test]
     fn search_finds_known_seed() {
         let target = [12u8, 15, 21]; // "mpv"
-        // Stride 1 from 0 must hit seed 0 immediately.
-        assert_eq!(search(&target, 0, 1, 10), Some(0));
+        // Stride 1 from 0 must hit seed 0 immediately: [found, seed, best_len].
+        assert_eq!(search(&target, 0, 1, 10), vec![1, 0, 3]);
     }
 
     /// A non-matching first byte abandons the seed (prefix semantics).
@@ -169,9 +184,20 @@ mod tests {
         let target = [0u8]; // "a"
         // seed 0's first letter is 'm' (12), not 'a' (0), so seed 0 is rejected;
         // some later seed produces 'a' first.
-        let found = search(&target, 0, 1, 1000).expect("a single-letter target must be findable");
-        let mut mt = Mt19937::new();
-        assert!(seed_matches(&mut mt, found, &target));
+        let r = search(&target, 0, 1, 1000);
+        assert_eq!(r[0], 1, "a single-letter target must be findable");
+        let found = r[1];
         assert_ne!(found, 0);
+        let mut mt = Mt19937::new();
+        assert_eq!(prefix_match_len(&mut mt, found, &target), 1);
+    }
+
+    /// `best_len` reports the closest (longest) prefix when there is no full match.
+    #[test]
+    fn search_reports_best_prefix() {
+        // Seed 0 -> "mpv…"; target "ma" matches only the leading 'm'.
+        let r = search(&[12, 0], 0, 1, 1); // scan seed 0 only
+        assert_eq!(r[0], 0, "not a full match");
+        assert_eq!(r[2], 1, "closest prefix is 'm' (length 1)");
     }
 }

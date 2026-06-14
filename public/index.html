@@ -25,10 +25,13 @@
   </nav>
 
   <main class="container">
-    <div class="monkey-row">
+    <div class="monkey-row" id="idle-monkey">
       <div class="typewriter-monkey large-monkey"></div>
       <div class="typewriter-monkey small-monkey"></div>
     </div>
+
+    <!-- One monkey per running worker, populated by app.js on submit. -->
+    <div id="monkeys" class="monkeys hidden" aria-live="polite"></div>
 
     <form id="word-input-form" class="input-row">
       <input id="target-word-input" type="text" autocomplete="off" autocapitalize="off"

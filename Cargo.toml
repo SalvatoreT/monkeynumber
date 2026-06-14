@@ -12,6 +12,9 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 wasm-bindgen = "0.2"
 
+# wasm-pack runs `wasm-opt`, which already strips and size-optimizes the binary
+# (~14 KB). Rust's `strip = true` is redundant here and makes wasm-opt fail, so
+# it's intentionally omitted.
 [profile.release]
 opt-level = 3
 lto = true
