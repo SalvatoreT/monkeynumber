@@ -65,13 +65,16 @@ command installs it** (via rustup) before `wrangler deploy` compiles the WASM.
    *Connect to Git* → pick this repo. Set the production branch to `main`. (Create a
    **Worker**, not a Pages project — the wrangler-config "Skipping file" warning in the
    build log is expected and harmless for a Workers build.)
-2. **Build command** — installs the toolchain the image lacks. Each step must be on the
+2. **Build command** — installs Rust, which the image lacks. Each step must be on the
    same line as the rest (the `. "$HOME/.cargo/env"` is required, or the next command
    fails with `cargo: not found`):
 
    ```shell
-   curl https://sh.rustup.rs -sSf | sh -s -- -y && . "$HOME/.cargo/env" && rustup target add wasm32-unknown-unknown && cargo install wasm-pack
+   curl https://sh.rustup.rs -sSf | sh -s -- -y && . "$HOME/.cargo/env" && rustup target add wasm32-unknown-unknown
    ```
+
+   No need to install wasm-pack here — the `build.command` hook in `wrangler.jsonc`
+   installs it on demand (`cargo install -q wasm-pack`) if it's missing.
 
 3. **Deploy command** — re-source cargo (separate shell), then deploy:
 
@@ -79,9 +82,9 @@ command installs it** (via rustup) before `wrangler deploy` compiles the WASM.
    . "$HOME/.cargo/env" && npx wrangler deploy
    ```
 
-   `wrangler deploy` runs the `build.command` hook in `wrangler.jsonc`, which builds
-   the WASM into `public/pkg/`, then uploads `public/` as static assets. (Don't put
-   `wasm-pack build` in the build command — the deploy step builds it.)
+   `wrangler deploy` runs the `build.command` hook in `wrangler.jsonc`, which installs
+   wasm-pack (if absent), builds the WASM into `public/pkg/`, then uploads `public/` as
+   static assets.
 4. **Stop the old Pages deploy** — remove the `monkeynumber.xyz` custom domain from the
    old Cloudflare Pages project and disable its automatic deployments (or delete it).
 5. **Move the domain to the Worker** — the `monkeynumber` Worker → Settings →
@@ -98,7 +101,7 @@ in the Workers Builds settings and every PR / non-`main` branch gets a
 
 ### Manual deploy (optional)
 
-With Rust + wasm-pack installed locally:
+With Rust installed locally (the build hook adds wasm-pack if it's missing):
 
 ```shell
 npm run deploy     # = wrangler deploy (builds the WASM via the wrangler build hook)

@@ -5,9 +5,10 @@ import init, { search } from './pkg/monkeynumber.js';
 
 const ready = init();
 
-// Seeds scanned per WASM call. Large enough to amortise the call overhead,
-// small enough to report progress and let the winner stop its siblings quickly.
-const BATCH = 1_000_000;
+// Seeds scanned per WASM call. Large enough to amortise the call overhead, small
+// enough that each monkey reports its "closest" often so progress is visible live
+// (and the winner stops its siblings quickly).
+const BATCH = 100_000;
 const U32 = 0x1_0000_0000; // 2^32
 
 self.onmessage = async (e) => {
@@ -17,20 +18,23 @@ self.onmessage = async (e) => {
   const target = new Uint8Array(targetArray);
   let seed = start >>> 0;
   let tried = 0;
+  let best = 0; // longest target prefix this monkey has reproduced so far
   // This worker is responsible for ~2^32 / stride seeds; stop once swept.
   const sliceSize = Math.ceil(U32 / stride);
 
   while (tried < sliceSize) {
-    const found = search(target, seed, stride, BATCH);
-    if (found !== undefined) {
-      self.postMessage({ type: 'completed', seed: found });
+    // [found, foundSeed, bestLen] for this batch.
+    const [found, foundSeed, bestLen] = search(target, seed, stride, BATCH);
+    if (found === 1) {
+      self.postMessage({ type: 'completed', seed: foundSeed });
       return;
     }
+    if (bestLen > best) best = bestLen;
     tried += BATCH;
     seed = (seed + stride * BATCH) >>> 0;
-    self.postMessage({ type: 'progress', tried: BATCH });
+    self.postMessage({ type: 'progress', tried: BATCH, best });
   }
 
   // Swept the whole slice without a hit (only happens for very long words).
-  self.postMessage({ type: 'exhausted' });
+  self.postMessage({ type: 'exhausted', best });
 };

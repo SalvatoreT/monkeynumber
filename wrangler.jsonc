@@ -8,9 +8,15 @@
   // `wrangler dev` / `wrangler deploy`. Output lands in public/pkg/ so it ships
   // as a static asset. watch_dir is the Rust source, so `wrangler dev` only
   // rebuilds the WASM when lib.rs changes (front-end edits hot-reload on their own).
+  //
+  // wasm-pack is installed on demand (mirroring cloudflare/rustwasm-worker-template's
+  // `cargo install -q worker-build`), so the Workers Builds image — which ships Rust
+  // but not wasm-pack — can build with no extra dashboard step. The `command -v`
+  // guard skips the install when wasm-pack is already present, so local `wrangler dev`
+  // doesn't re-check/upgrade it on every rebuild.
   // https://developers.cloudflare.com/workers/wrangler/custom-builds/
   "build": {
-    "command": "wasm-pack build --target web --out-dir public/pkg --release",
+    "command": "command -v wasm-pack >/dev/null 2>&1 || cargo install -q wasm-pack && wasm-pack build --target web --out-dir public/pkg --release",
     "watch_dir": "src"
   },
   "assets": {
@@ -22,4 +28,9 @@
   // https://developers.cloudflare.com/workers/configuration/previews/
   "workers_dev": true,
   "preview_urls": true
+  // The monkeynumber.xyz custom domain is attached to this Worker in the
+  // Cloudflare dashboard, intentionally NOT via a `routes` + `custom_domain`
+  // entry here: that entry breaks `wrangler dev`'s root-asset serving (the
+  // Preview tab / local dev would 404 on `/`). Per Cloudflare's docs, omitting
+  // `routes` leaves the dashboard-managed domain untouched on deploy.
 }
