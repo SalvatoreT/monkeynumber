@@ -15,5 +15,11 @@
   },
   "assets": {
     "directory": "./public"
-  }
+  },
+  // Enable the *.workers.dev route and per-version preview URLs, so Workers
+  // Builds generates a `<branch>-monkeynumber.<subdomain>.workers.dev` preview
+  // for every non-production branch / PR (with non-production branch builds on).
+  // https://developers.cloudflare.com/workers/configuration/previews/
+  "workers_dev": true,
+  "preview_urls": true
 }

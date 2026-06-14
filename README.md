@@ -55,10 +55,51 @@ cargo test
 
 ## Deploy (Cloudflare Workers)
 
-```shell
-npm run deploy     # builds the WASM, then `wrangler deploy`
-```
+Deployment runs through [Workers Builds](https://developers.cloudflare.com/workers/ci-cd/builds/),
+connected to this Git repo. The build image doesn't ship Rust, so the **build
+command installs it** (via rustup) before `wrangler deploy` compiles the WASM.
 
-Then attach the `monkeynumber.xyz` custom domain to the Worker in the Cloudflare
-dashboard (Workers & Pages → your Worker → Settings → Domains & Routes), and retire
-the old Pages project so the domain points at the Worker.
+### One-time setup
+
+1. **Connect the repo** — dashboard → Workers & Pages → Create → **Workers** →
+   *Connect to Git* → pick this repo. Set the production branch to `main`. (Create a
+   **Worker**, not a Pages project — the wrangler-config "Skipping file" warning in the
+   build log is expected and harmless for a Workers build.)
+2. **Build command** — installs the toolchain the image lacks. Each step must be on the
+   same line as the rest (the `. "$HOME/.cargo/env"` is required, or the next command
+   fails with `cargo: not found`):
+
+   ```shell
+   curl https://sh.rustup.rs -sSf | sh -s -- -y && . "$HOME/.cargo/env" && rustup target add wasm32-unknown-unknown && cargo install wasm-pack
+   ```
+
+3. **Deploy command** — re-source cargo (separate shell), then deploy:
+
+   ```shell
+   . "$HOME/.cargo/env" && npx wrangler deploy
+   ```
+
+   `wrangler deploy` runs the `build.command` hook in `wrangler.jsonc`, which builds
+   the WASM into `public/pkg/`, then uploads `public/` as static assets. (Don't put
+   `wasm-pack build` in the build command — the deploy step builds it.)
+4. **Stop the old Pages deploy** — remove the `monkeynumber.xyz` custom domain from the
+   old Cloudflare Pages project and disable its automatic deployments (or delete it).
+5. **Move the domain to the Worker** — the `monkeynumber` Worker → Settings →
+   Domains & Routes → add `monkeynumber.xyz` as a custom domain.
+
+After that, every push to `main` redeploys automatically.
+
+### Preview URLs
+
+`wrangler.jsonc` sets `preview_urls: true` and `workers_dev: true`. Turn on
+[non-production branch builds](https://developers.cloudflare.com/workers/ci-cd/builds/build-branches/)
+in the Workers Builds settings and every PR / non-`main` branch gets a
+`<branch>-monkeynumber.<subdomain>.workers.dev` preview link, posted back to the PR.
+
+### Manual deploy (optional)
+
+With Rust + wasm-pack installed locally:
+
+```shell
+npm run deploy     # = wrangler deploy (builds the WASM via the wrangler build hook)
+```
