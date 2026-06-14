@@ -21,11 +21,10 @@
   // for every non-production branch / PR (with non-production branch builds on).
   // https://developers.cloudflare.com/workers/configuration/previews/
   "workers_dev": true,
-  "preview_urls": true,
-  // Serve the production site from the apex domain. wrangler creates the proxied
-  // DNS record + TLS cert on deploy. The zone must already be in this account.
-  // https://developers.cloudflare.com/workers/configuration/routing/custom-domains/
-  "routes": [
-    { "pattern": "monkeynumber.xyz", "custom_domain": true }
-  ]
+  "preview_urls": true
+  // The monkeynumber.xyz custom domain is attached to this Worker in the
+  // Cloudflare dashboard, intentionally NOT via a `routes` + `custom_domain`
+  // entry here: that entry breaks `wrangler dev`'s root-asset serving (the
+  // Preview tab / local dev would 404 on `/`). Per Cloudflare's docs, omitting
+  // `routes` leaves the dashboard-managed domain untouched on deploy.
 }
