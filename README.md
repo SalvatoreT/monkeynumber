@@ -55,26 +55,45 @@ cargo test
 
 ## Deploy (Cloudflare Workers)
 
-Deploys run in CI. Pushing to `main` triggers
-[`.github/workflows/deploy.yml`](.github/workflows/deploy.yml), which installs
-Rust + wasm-pack, runs the tests, builds the WASM, and runs `wrangler deploy`.
+Deployment runs through [Workers Builds](https://developers.cloudflare.com/workers/ci-cd/builds/),
+connected to this Git repo. The build image doesn't ship Rust, so the **build
+command installs it** (via rustup) before `wrangler deploy` compiles the WASM.
 
 ### One-time setup
 
-1. **API token** — create a Cloudflare API token from the *Edit Cloudflare Workers*
-   template and add it to the repo as the `CLOUDFLARE_API_TOKEN` secret
-   (Settings → Secrets and variables → Actions). Add `CLOUDFLARE_ACCOUNT_ID` as well if
-   your token can see more than one account.
-2. **Free the domain from Pages** — this project used to deploy via Cloudflare Pages.
-   In the dashboard (Workers & Pages → the old Pages project), remove the
-   `monkeynumber.xyz` custom domain, then **delete or disconnect** that Pages project so
-   merges stop rebuilding it.
-3. **Deploy** — push to `main` (or run the workflow manually). It creates/updates the
-   `monkeynumber` Worker.
-4. **Attach the domain to the Worker** — dashboard → the `monkeynumber` Worker →
-   Settings → Domains & Routes → add `monkeynumber.xyz` as a custom domain.
+1. **Connect the repo** — dashboard → Workers & Pages → Create → Workers →
+   *Connect to Git* → pick this repo. Set the production branch to `main`.
+2. **Build command** (installs the toolchain the image lacks):
+
+   ```shell
+   curl https://sh.rustup.rs -sSf | sh -s -- -y
+   . "$HOME/.cargo/env"
+   rustup target add wasm32-unknown-unknown
+   cargo install wasm-pack
+   ```
+
+3. **Deploy command** (re-source cargo, then deploy):
+
+   ```shell
+   . "$HOME/.cargo/env"
+   npx wrangler deploy
+   ```
+
+   `wrangler deploy` runs the `build.command` hook in `wrangler.jsonc`, which builds
+   the WASM into `public/pkg/`, then uploads `public/` as static assets.
+4. **Stop the old Pages deploy** — remove the `monkeynumber.xyz` custom domain from the
+   old Cloudflare Pages project and disable its automatic deployments (or delete it).
+5. **Move the domain to the Worker** — the `monkeynumber` Worker → Settings →
+   Domains & Routes → add `monkeynumber.xyz` as a custom domain.
 
 After that, every push to `main` redeploys automatically.
+
+### Preview URLs
+
+`wrangler.jsonc` sets `preview_urls: true` and `workers_dev: true`. Turn on
+[non-production branch builds](https://developers.cloudflare.com/workers/ci-cd/builds/build-branches/)
+in the Workers Builds settings and every PR / non-`main` branch gets a
+`<branch>-monkeynumber.<subdomain>.workers.dev` preview link, posted back to the PR.
 
 ### Manual deploy (optional)
 
