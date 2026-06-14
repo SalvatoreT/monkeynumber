@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Monkey Number</title>
+  <meta name="description" content="Given enough time a monkey on a typewriter will create Shakespeare. Using the same idea, let's get a pseudorandom number seed to create what you want.">
+  <link rel="canonical" href="https://monkeynumber.xyz/">
+  <link rel="icon" type="image/png" href="/assets/favicon.png">
+
+  <!-- Open Graph -->
+  <meta property="fb:app_id" content="527162587466336">
+  <meta property="og:title" content="Monkey Number">
+  <meta property="og:type" content="website">
+  <meta property="og:description" content="Given enough time a monkey on a typewriter will create Shakespeare. Using the same idea, let's get a pseudorandom number seed to create what you want.">
+  <meta property="og:image" content="https://monkeynumber.xyz/assets/monkeynumber.gif">
+  <meta property="og:url" content="https://monkeynumber.xyz/">
+
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <a class="brand" href="/">Monkey Number</a>
+    <a href="https://github.com/SalvatoreT/monkeynumber">GitHub Project</a>
+  </nav>
+
+  <main class="container">
+    <div class="monkey-row">
+      <div class="typewriter-monkey large-monkey"></div>
+      <div class="typewriter-monkey small-monkey"></div>
+    </div>
+
+    <form id="word-input-form" class="input-row">
+      <input id="target-word-input" type="text" autocomplete="off" autocapitalize="off"
+             spellcheck="false" placeholder="Target Word" aria-label="Target word">
+      <button type="submit">Go!</button>
+    </form>
+
+    <p id="monkey-status" class="status" role="status" aria-live="polite"></p>
+
+    <div id="monkey-result-row" class="hidden">
+      <code id="monkey-result"></code>
+    </div>
+  </main>
+
+  <script type="module" src="/app.js"></script>
+</body>
+</html>

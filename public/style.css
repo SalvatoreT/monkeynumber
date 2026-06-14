@@ -1,0 +1,128 @@
+:root {
+  --bg: #fff;
+  --fg: #333;
+  --muted: #777;
+  --bar: #222;
+  --bar-fg: #f5f5f5;
+  --border: #ccc;
+  --accent: #f5f5f5;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: var(--fg);
+  background: var(--bg);
+}
+
+.navbar {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 0 1rem;
+  height: 50px;
+  background: var(--bar);
+}
+.navbar a { color: var(--bar-fg); text-decoration: none; opacity: 0.85; }
+.navbar a:hover { opacity: 1; }
+.navbar .brand { font-weight: 600; margin-right: auto; }
+
+.container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+  text-align: center;
+}
+
+.monkey-row {
+  display: flex;
+  justify-content: center;
+  min-height: 256px;
+}
+
+.input-row {
+  display: flex;
+  justify-content: center;
+  gap: 0;
+  margin: 1.5rem auto 0;
+  max-width: 360px;
+}
+.input-row input {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0.5rem 0.75rem;
+  font-size: 1rem;
+  border: 1px solid var(--border);
+  border-right: none;
+  border-radius: 4px 0 0 4px;
+}
+.input-row button {
+  flex: 0 0 auto;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--accent);
+  border-radius: 0 4px 4px 0;
+}
+.input-row button:hover { background: #e8e8e8; }
+
+.status {
+  color: var(--muted);
+  min-height: 1.25rem;
+  margin: 1rem 0 0;
+}
+
+#monkey-result-row { margin-top: 1rem; }
+#monkey-result {
+  display: inline-block;
+  max-width: 100%;
+  padding: 0.75rem 1rem;
+  background: var(--accent);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.95rem;
+  word-break: break-all;
+  text-align: left;
+}
+
+.hidden { display: none !important; }
+[hidden] { display: none !important; }
+
+/* ---- Typewriter sprite animation (ported from the original css/index.css) ---- */
+.typewriter-monkey.small-monkey {
+  width: 256px;
+  height: 256px;
+  background: url('/assets/typewriter-sprite.png') left center;
+  background-size: auto 256px;
+}
+.typewriter-monkey.small-monkey.animated {
+  animation: play-small 1s steps(16) infinite;
+}
+@keyframes play-small {
+  100% { background-position: -4096px; }
+}
+
+.typewriter-monkey.large-monkey {
+  width: 512px;
+  height: 512px;
+  background: url('/assets/typewriter-sprite.png') left center;
+  background-size: auto 512px;
+}
+.typewriter-monkey.large-monkey.animated {
+  animation: play-large 1s steps(16) infinite;
+}
+@keyframes play-large {
+  100% { background-position: -8192px; }
+}
+
+/* Show the large monkey on wide screens, the small one on phones. */
+.small-monkey { display: none; }
+@media (max-width: 600px) {
+  .large-monkey { display: none; }
+  .small-monkey { display: block; }
+  .monkey-row { min-height: 256px; }
+}
