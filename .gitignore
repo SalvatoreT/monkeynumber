@@ -5,6 +5,7 @@
 # Node / Wrangler
 /node_modules/
 .wrangler/
+package-lock.json
 
 # Editors
 .idea/

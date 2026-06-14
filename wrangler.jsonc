@@ -1,8 +1,18 @@
 {
+  "$schema": "./node_modules/wrangler/config-schema.json",
   // Assets-only Worker: no `main` script — every request is served from ./public.
   // https://developers.cloudflare.com/workers/static-assets/
   "name": "monkeynumber",
   "compatibility_date": "2026-06-14",
+  // Custom build: compile the Rust seed-search to WASM before every
+  // `wrangler dev` / `wrangler deploy`. Output lands in public/pkg/ so it ships
+  // as a static asset. watch_dir is the Rust source, so `wrangler dev` only
+  // rebuilds the WASM when lib.rs changes (front-end edits hot-reload on their own).
+  // https://developers.cloudflare.com/workers/wrangler/custom-builds/
+  "build": {
+    "command": "wasm-pack build --target web --out-dir public/pkg --release",
+    "watch_dir": "src"
+  },
   "assets": {
     "directory": "./public"
   }
