@@ -1,0 +1,9 @@
+{
+  // Assets-only Worker: no `main` script — every request is served from ./public.
+  // https://developers.cloudflare.com/workers/static-assets/
+  "name": "monkeynumber",
+  "compatibility_date": "2026-06-14",
+  "assets": {
+    "directory": "./public"
+  }
+}

@@ -1,5 +1,11 @@
-_site/
-.sass-cache/
-.jekyll-metadata
+# Rust / WASM build output
+/target/
+/public/pkg/
+
+# Node / Wrangler
+/node_modules/
+.wrangler/
+
+# Editors
 .idea/
-.jekyll-cache/
+.DS_Store

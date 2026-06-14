@@ -1,0 +1,7 @@
+# Keep the deployed asset set lean: ship only the .wasm + JS glue from pkg/,
+# not wasm-pack's bookkeeping files.
+pkg/*.d.ts
+pkg/package.json
+pkg/README.md
+pkg/LICENSE
+pkg/.gitignore
