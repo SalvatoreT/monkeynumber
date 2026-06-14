@@ -61,26 +61,27 @@ command installs it** (via rustup) before `wrangler deploy` compiles the WASM.
 
 ### One-time setup
 
-1. **Connect the repo** — dashboard → Workers & Pages → Create → Workers →
-   *Connect to Git* → pick this repo. Set the production branch to `main`.
-2. **Build command** (installs the toolchain the image lacks):
+1. **Connect the repo** — dashboard → Workers & Pages → Create → **Workers** →
+   *Connect to Git* → pick this repo. Set the production branch to `main`. (Create a
+   **Worker**, not a Pages project — the wrangler-config "Skipping file" warning in the
+   build log is expected and harmless for a Workers build.)
+2. **Build command** — installs the toolchain the image lacks. Each step must be on the
+   same line as the rest (the `. "$HOME/.cargo/env"` is required, or the next command
+   fails with `cargo: not found`):
 
    ```shell
-   curl https://sh.rustup.rs -sSf | sh -s -- -y
-   . "$HOME/.cargo/env"
-   rustup target add wasm32-unknown-unknown
-   cargo install wasm-pack
+   curl https://sh.rustup.rs -sSf | sh -s -- -y && . "$HOME/.cargo/env" && rustup target add wasm32-unknown-unknown && cargo install wasm-pack
    ```
 
-3. **Deploy command** (re-source cargo, then deploy):
+3. **Deploy command** — re-source cargo (separate shell), then deploy:
 
    ```shell
-   . "$HOME/.cargo/env"
-   npx wrangler deploy
+   . "$HOME/.cargo/env" && npx wrangler deploy
    ```
 
    `wrangler deploy` runs the `build.command` hook in `wrangler.jsonc`, which builds
-   the WASM into `public/pkg/`, then uploads `public/` as static assets.
+   the WASM into `public/pkg/`, then uploads `public/` as static assets. (Don't put
+   `wasm-pack build` in the build command — the deploy step builds it.)
 4. **Stop the old Pages deploy** — remove the `monkeynumber.xyz` custom domain from the
    old Cloudflare Pages project and disable its automatic deployments (or delete it).
 5. **Move the domain to the Worker** — the `monkeynumber` Worker → Settings →
