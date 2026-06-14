@@ -69,6 +69,33 @@ html, body {
 }
 .input-row button:hover { background: #e8e8e8; }
 
+/* Grid of working monkeys — one per running worker. */
+.monkeys {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 0.25rem 0.75rem;
+  min-height: 160px;
+}
+.monkey-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 120px;
+}
+.monkey-best {
+  margin-top: -1.25rem; /* tuck the label under the monkey's typewriter */
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.95rem;
+  letter-spacing: 0.02em;
+  min-height: 1.2em;
+  word-break: break-all;
+}
+.monkey-best .hit { color: var(--fg); font-weight: 700; }
+.monkey-best .miss { color: var(--border); }
+.monkey-card.winner .monkey-best .hit { color: #2e7d32; }
+
 .status {
   color: var(--muted);
   min-height: 1.25rem;
@@ -117,6 +144,20 @@ html, body {
 }
 @keyframes play-large {
   100% { background-position: -8192px; }
+}
+
+/* Mini monkey: one per worker in the grid (16 frames × 120px). */
+.typewriter-monkey.mini-monkey {
+  width: 120px;
+  height: 120px;
+  background: url('/assets/typewriter-sprite.png') left center;
+  background-size: auto 120px;
+}
+.typewriter-monkey.mini-monkey.animated {
+  animation: play-mini 1s steps(16) infinite;
+}
+@keyframes play-mini {
+  100% { background-position: -1920px; }
 }
 
 /* Show the large monkey on wide screens, the small one on phones. */
