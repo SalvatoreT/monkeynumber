@@ -55,10 +55,31 @@ cargo test
 
 ## Deploy (Cloudflare Workers)
 
-```shell
-npm run deploy     # builds the WASM, then `wrangler deploy`
-```
+Deploys run in CI. Pushing to `main` triggers
+[`.github/workflows/deploy.yml`](.github/workflows/deploy.yml), which installs
+Rust + wasm-pack, runs the tests, builds the WASM, and runs `wrangler deploy`.
 
-Then attach the `monkeynumber.xyz` custom domain to the Worker in the Cloudflare
-dashboard (Workers & Pages → your Worker → Settings → Domains & Routes), and retire
-the old Pages project so the domain points at the Worker.
+### One-time setup
+
+1. **API token** — create a Cloudflare API token from the *Edit Cloudflare Workers*
+   template and add it to the repo as the `CLOUDFLARE_API_TOKEN` secret
+   (Settings → Secrets and variables → Actions). Add `CLOUDFLARE_ACCOUNT_ID` as well if
+   your token can see more than one account.
+2. **Free the domain from Pages** — this project used to deploy via Cloudflare Pages.
+   In the dashboard (Workers & Pages → the old Pages project), remove the
+   `monkeynumber.xyz` custom domain, then **delete or disconnect** that Pages project so
+   merges stop rebuilding it.
+3. **Deploy** — push to `main` (or run the workflow manually). It creates/updates the
+   `monkeynumber` Worker.
+4. **Attach the domain to the Worker** — dashboard → the `monkeynumber` Worker →
+   Settings → Domains & Routes → add `monkeynumber.xyz` as a custom domain.
+
+After that, every push to `main` redeploys automatically.
+
+### Manual deploy (optional)
+
+With Rust + wasm-pack installed locally:
+
+```shell
+npm run deploy     # = wrangler deploy (builds the WASM via the wrangler build hook)
+```
