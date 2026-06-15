@@ -4,9 +4,9 @@
   "private": true,
   "description": "Brute-force a Mersenne-Twister seed that reproduces a target word",
   "scripts": {
-    "build": "wasm-pack build --target web --out-dir public/pkg --release",
-    "dev": "wrangler dev",
-    "deploy": "wrangler deploy"
+    "build": "sh scripts/build.sh",
+    "dev": "npm run build && wrangler dev",
+    "deploy": "npm run build && wrangler deploy"
   },
   "devDependencies": {
     "wrangler": "^4.100.0"

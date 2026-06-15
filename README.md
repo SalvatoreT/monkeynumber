@@ -44,7 +44,7 @@ npm run dev        # builds the WASM, then runs `wrangler dev` at http://localho
 `npm run dev` rebuilds the WASM each time; to rebuild on its own:
 
 ```shell
-npm run build      # wasm-pack build --target web --out-dir public/pkg --release
+npm run build      # scripts/build.sh — installs the toolchain on demand, then wasm-pack build
 ```
 
 Run the Rust unit tests (MT19937 reference vectors, no WASM needed):
@@ -56,8 +56,16 @@ cargo test
 ## Deploy (Cloudflare Workers)
 
 Deployment runs through [Workers Builds](https://developers.cloudflare.com/workers/ci-cd/builds/),
-connected to this Git repo. The build image doesn't ship Rust, so the **build
-command installs it** (via rustup) before `wrangler deploy` compiles the WASM.
+connected to this Git repo, using the **default commands** — no customization needed:
+
+- Build command: `npm run build`
+- Deploy command: `npx wrangler deploy`
+
+`npm run build` ([`scripts/build.sh`](scripts/build.sh)) is self-contained: the Workers
+Builds image ships Node but not Rust, so the script installs the Rust toolchain +
+wasm-pack on demand (a fast no-op locally, where they already exist), then compiles the
+WASM into `public/pkg/`. `npx wrangler deploy` then just uploads `public/` as static
+assets — the deploy step needs no toolchain.
 
 ### One-time setup
 
@@ -65,30 +73,9 @@ command installs it** (via rustup) before `wrangler deploy` compiles the WASM.
    *Connect to Git* → pick this repo. Set the production branch to `main`. (Create a
    **Worker**, not a Pages project — the wrangler-config "Skipping file" warning in the
    build log is expected and harmless for a Workers build.)
-2. **Build command** — installs Rust, which the image lacks. Each step must be on the
-   same line as the rest (the `. "$HOME/.cargo/env"` is required, or the next command
-   fails with `cargo: not found`):
-
-   ```shell
-   curl https://sh.rustup.rs -sSf | sh -s -- -y && . "$HOME/.cargo/env" && rustup target add wasm32-unknown-unknown
-   ```
-
-   No need to install wasm-pack here — the `build.command` hook in `wrangler.jsonc`
-   installs it on demand (`cargo install -q wasm-pack`) if it's missing.
-
-3. **Deploy command** — re-source cargo (separate shell), then deploy:
-
-   ```shell
-   . "$HOME/.cargo/env" && npx wrangler deploy
-   ```
-
-   `wrangler deploy` runs the `build.command` hook in `wrangler.jsonc`, which installs
-   wasm-pack (if absent), builds the WASM into `public/pkg/`, then uploads `public/` as
-   static assets.
-4. **Stop the old Pages deploy** — remove the `monkeynumber.xyz` custom domain from the
-   old Cloudflare Pages project and disable its automatic deployments (or delete it).
-5. **Move the domain to the Worker** — the `monkeynumber` Worker → Settings →
-   Domains & Routes → add `monkeynumber.xyz` as a custom domain.
+2. **Custom domain** — attach `monkeynumber.xyz` to the `monkeynumber` Worker
+   (Settings → Domains & Routes), and make sure the old Cloudflare Pages project is
+   deleted/disconnected so it doesn't fight for the domain.
 
 After that, every push to `main` redeploys automatically.
 
@@ -101,8 +88,6 @@ in the Workers Builds settings and every PR / non-`main` branch gets a
 
 ### Manual deploy (optional)
 
-With Rust installed locally (the build hook adds wasm-pack if it's missing):
-
 ```shell
-npm run deploy     # = wrangler deploy (builds the WASM via the wrangler build hook)
+npm run deploy     # = npm run build (toolchain installed on demand) && wrangler deploy
 ```
