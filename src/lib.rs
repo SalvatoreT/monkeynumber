@@ -14,6 +14,7 @@ const M: usize = 397;
 const MATRIX_A: u32 = 0x9908_b0df;
 const UPPER_MASK: u32 = 0x8000_0000;
 const LOWER_MASK: u32 = 0x7fff_ffff;
+const MAG01: [u32; 2] = [0, MATRIX_A];
 
 /// Standard MT19937 (32-bit).
 pub struct Mt19937 {
@@ -63,7 +64,6 @@ impl Mt19937 {
 
     #[inline]
     fn generate_block(&mut self) {
-        const MAG01: [u32; 2] = [0, MATRIX_A];
         let mut kk = 0;
         while kk < N - M {
             let y = (self.mt[kk] & UPPER_MASK) | (self.mt[kk + 1] & LOWER_MASK);
@@ -90,6 +90,60 @@ impl Mt19937 {
                 return v;
             }
         }
+    }
+
+    /// Lazy/partial-twist fast path for [`prefix_match_len`]. Computes only the
+    /// seed words and twist outputs actually consumed instead of the full
+    /// 624-word `init_genrand` + `generate_block`, which is roughly 3× less work
+    /// per seed. It is bit-exact with the full path while the consumed MT word
+    /// index stays below `N - M` (the region where the twist of output word `k`
+    /// reads only original seed words `mt[k]`, `mt[k+1]`, `mt[k+M]`); past that it
+    /// returns `None` so the caller falls back to the full path.
+    ///
+    /// `self.mt` is reused as scratch: each call overwrites it forward from index
+    /// 0 and reads only indices it has filled, so stale data from a prior call is
+    /// never observed.
+    #[inline]
+    fn prefix_match_len_fast(&mut self, seed: u32, target: &[u8]) -> Option<usize> {
+        self.mt[0] = seed;
+        let mut filled = 1usize; // self.mt[0..filled] hold valid seed words
+        let mut k = 0usize; // next MT output word index
+        let mut matched = 0usize;
+        for &t in target {
+            // limited_rand: draw 5-bit values, reject those > 26.
+            let letter = loop {
+                let hi = k + M; // highest seed word this output needs
+                if hi >= N {
+                    return None; // out of the lazy-twist validity region
+                }
+                while filled <= hi {
+                    // Extend the `init_genrand` seed chain on demand.
+                    let prev = self.mt[filled - 1];
+                    self.mt[filled] = 1_812_433_253u32
+                        .wrapping_mul(prev ^ (prev >> 30))
+                        .wrapping_add(filled as u32);
+                    filled += 1;
+                }
+                let y = (self.mt[k] & UPPER_MASK) | (self.mt[k + 1] & LOWER_MASK);
+                let mut w = self.mt[hi] ^ (y >> 1) ^ MAG01[(y & 1) as usize];
+                // Tempering (identical to genrand_int32).
+                w ^= w >> 11;
+                w ^= (w << 7) & 0x9d2c_5680;
+                w ^= (w << 15) & 0xefc6_0000;
+                w ^= w >> 18;
+                k += 1;
+                let v = w & 31;
+                if v <= 26 {
+                    break v;
+                }
+            };
+            if letter == t as u32 {
+                matched += 1;
+            } else {
+                break;
+            }
+        }
+        Some(matched)
     }
 }
 
@@ -133,7 +187,10 @@ pub fn search(target: &[u8], start: u32, stride: u32, batch: u32) -> Vec<u32> {
     let mut seed = start;
     let mut best_len = 0u32;
     for _ in 0..batch {
-        let matched = prefix_match_len(&mut mt, seed, target) as u32;
+        let matched = mt
+            .prefix_match_len_fast(seed, target)
+            .unwrap_or_else(|| prefix_match_len(&mut mt, seed, target))
+            as u32;
         if matched as usize == target.len() {
             return vec![1, seed, matched];
         }
@@ -190,6 +247,36 @@ mod tests {
         assert_ne!(found, 0);
         let mut mt = Mt19937::new();
         assert_eq!(prefix_match_len(&mut mt, found, &target), 1);
+    }
+
+    /// The lazy-twist fast path must be bit-exact with the full `prefix_match_len`
+    /// across the validity region, for every seed and target length.
+    #[test]
+    fn fast_path_matches_full_path() {
+        let mut mt = Mt19937::new();
+        // A spread of targets of various lengths (letter indices 0..=26).
+        let targets: &[&[u8]] = &[
+            &[0],
+            &[12, 15, 21],            // "mpv" (seed 0's prefix)
+            &[1, 2, 3, 4, 5],
+            &[12, 15, 21, 0, 3, 3, 7, 9], // "mpvaddhj" (seed 0, length 8)
+            &[26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26],
+        ];
+        let seeds = [
+            0u32, 1, 2, 5489, 1_000, 65_535, 1_000_000, 2_147_483_648, 4_294_967_295,
+        ];
+        for &target in targets {
+            // Dense sweep of the low seed range plus a few notable points.
+            for seed in (0u32..50_000).chain(seeds.iter().copied()) {
+                let full = prefix_match_len(&mut mt, seed, target);
+                let fast = mt.prefix_match_len_fast(seed, target);
+                assert_eq!(
+                    fast,
+                    Some(full),
+                    "seed {seed} target {target:?}: fast {fast:?} != full {full}"
+                );
+            }
+        }
     }
 
     /// `best_len` reports the closest (longest) prefix when there is no full match.
