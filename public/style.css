@@ -29,6 +29,32 @@ html, body {
 .navbar a:hover { opacity: 1; }
 .navbar .brand { font-weight: 600; margin-right: auto; }
 
+/* Search progress, visually attached to the navbar (same dark background). */
+.progress {
+  background: var(--bar);
+  padding: 0 0 0.4rem;
+}
+.progress-track {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.15);
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--bar-fg);
+  transition: width 0.2s linear;
+}
+.progress-meta {
+  margin: 0.35rem 1rem 0;
+  color: var(--bar-fg);
+  opacity: 0.85;
+  font-size: 0.85rem;
+  text-align: center;
+  min-height: 1.1em;
+  font-variant-numeric: tabular-nums;
+}
+
 .container {
   max-width: 720px;
   margin: 0 auto;
@@ -68,6 +94,29 @@ html, body {
   border-radius: 0 4px 4px 0;
 }
 .input-row button:hover { background: #e8e8e8; }
+.input-row button:disabled { cursor: not-allowed; opacity: 0.5; }
+.input-row button:disabled:hover { background: var(--accent); }
+
+/* Inline warning under the input when a word is too long to ever have a seed. */
+.input-hint {
+  color: #c0392b;
+  min-height: 1.1rem;
+  margin: 0.5rem auto 0;
+  max-width: 420px;
+  font-size: 0.9rem;
+}
+
+/* "Start over" control shown once a search finishes. */
+.controls-row { margin-top: 1rem; }
+#start-over {
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--accent);
+  border-radius: 4px;
+}
+#start-over:hover { background: #e8e8e8; }
 
 /* Grid of working monkeys — one per running worker. */
 .monkeys {
