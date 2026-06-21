@@ -24,6 +24,13 @@
     <a href="https://github.com/SalvatoreT/monkeynumber">GitHub Project</a>
   </nav>
 
+  <!-- Search progress, attached to the header. Shown by app.js while searching. -->
+  <div id="search-progress" class="progress hidden" role="progressbar"
+       aria-valuemin="0" aria-valuemax="100" aria-label="Search progress">
+    <div class="progress-track"><div id="progress-fill" class="progress-fill"></div></div>
+    <p id="progress-meta" class="progress-meta"></p>
+  </div>
+
   <main class="container">
     <div class="monkey-row" id="idle-monkey">
       <div class="typewriter-monkey large-monkey"></div>
@@ -36,13 +43,19 @@
     <form id="word-input-form" class="input-row">
       <input id="target-word-input" type="text" autocomplete="off" autocapitalize="off"
              spellcheck="false" placeholder="Target Word" aria-label="Target word">
-      <button type="submit">Go!</button>
+      <button id="go-button" type="submit">Go!</button>
     </form>
+
+    <p id="input-hint" class="input-hint hidden" role="alert"></p>
 
     <p id="monkey-status" class="status" role="status" aria-live="polite"></p>
 
     <div id="monkey-result-row" class="hidden">
       <code id="monkey-result"></code>
+    </div>
+
+    <div id="controls-row" class="controls-row hidden">
+      <button id="start-over" type="button">Start over</button>
     </div>
   </main>
 
